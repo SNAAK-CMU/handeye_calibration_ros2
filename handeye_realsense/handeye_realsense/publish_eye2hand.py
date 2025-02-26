@@ -27,7 +27,7 @@ class TransformPublisher(Node):
         self.handeye_result_file_name = config["handeye_result_file_name"]
         self.base_link = config["base_link"]
         self.ee_link = config["ee_link"]
-        self.world_frame = config["world_frame"]
+        #self.world_frame = config["world_frame"]
         self.calculated_camera_optical_frame_name = config["calculated_camera_optical_frame_name"]
         
         self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
@@ -80,12 +80,7 @@ class TransformPublisher(Node):
     def get_full_transformation_matrix(self):
         T = np.eye(4)  # Start with the identity matrix
         link_order = [
-            ('world','panda_link0'),
-            ('panda_link0', 'panda_link1'), ('panda_link0', 'panda_link2'), 
-            ('panda_link0', 'panda_link3'), ('panda_link0', 'panda_link4'), 
-            ('panda_link0', 'panda_link5'), ('panda_link0', 'panda_link6'), 
-            ('panda_link0', 'panda_link7'), ('panda_link0', 'panda_link8'),
-            ('panda_link0', 'panda_end_effector'), ('panda_link0', 'panda_hand')
+            ('panda_link0', 'panda_hand')
         ]
         for (frame_id, child_frame_id) in link_order:
             if (frame_id, child_frame_id) in self.transformations:
@@ -95,32 +90,31 @@ class TransformPublisher(Node):
                 T_local = np.eye(4)
                 T_local[:3, :3] = self.quaternion_to_rotation_matrix(*rotation)
                 T_local[:3, 3] = translation
-                T = np.dot(T, T_local)
-                
+                T = np.dot(T, T_local)   
         return T
 
-    def publish_transform(self, translation_vector, rotation_matrix, frame_id, child_frame_id):
-        t = TransformStamped()
-        t.header.stamp = self.get_clock().now().to_msg()
-        t.header.frame_id = frame_id
-        t.child_frame_id = child_frame_id
-        # Set the translation
-        t.transform.translation.x = translation_vector[0]
-        t.transform.translation.y = translation_vector[1]
-        t.transform.translation.z = translation_vector[2]
+    # def publish_transform(self, translation_vector, rotation_matrix, frame_id, child_frame_id):
+    #     t = TransformStamped()
+    #     t.header.stamp = self.get_clock().now().to_msg()
+    #     t.header.frame_id = frame_id
+    #     t.child_frame_id = child_frame_id
+    #     # Set the translation
+    #     t.transform.translation.x = translation_vector[0]
+    #     t.transform.translation.y = translation_vector[1]
+    #     t.transform.translation.z = translation_vector[2]
 
-        # Convert the rotation matrix to a quaternion
-        transformation_matrix = np.eye(4)
-        transformation_matrix[:3, :3] = rotation_matrix
-        transformation_matrix[:3, 3] = translation_vector
-        quaternion = tf_transformations.quaternion_from_matrix(transformation_matrix)
+    #     # Convert the rotation matrix to a quaternion
+    #     transformation_matrix = np.eye(4)
+    #     transformation_matrix[:3, :3] = rotation_matrix
+    #     transformation_matrix[:3, 3] = translation_vector
+    #     quaternion = tf_transformations.quaternion_from_matrix(transformation_matrix)
 
-        t.transform.rotation.x = quaternion[0]
-        t.transform.rotation.y = quaternion[1]
-        t.transform.rotation.z = quaternion[2]
-        t.transform.rotation.w = quaternion[3]
+    #     t.transform.rotation.x = quaternion[0]
+    #     t.transform.rotation.y = quaternion[1]
+    #     t.transform.rotation.z = quaternion[2]
+    #     t.transform.rotation.w = quaternion[3]
 
-        self.tf_broadcaster.sendTransform(t)
+    #     self.tf_broadcaster.sendTransform(t)
 
     def publish_handeye_transform(self):
         transform_msg = TransformStamped()
@@ -138,10 +132,10 @@ class TransformPublisher(Node):
         self.tf_broadcaster.sendTransform(transform_msg)
 
         # Send the transform from camera_sim to world
-        Tc = self.get_full_transformation_matrix()
-        rc = Tc[:3, :3]
-        tc = Tc[:3, 3]
-        self.publish_transform(tc, rc, self.world_frame, self.ee_link)    
+        # Tc = self.get_full_transformation_matrix()
+        # rc = Tc[:3, :3]
+        # tc = Tc[:3, 3]
+        # self.publish_transform(tc, rc, self.base_link, self.ee_link)    
 
 
 def main(args=None):
