@@ -115,6 +115,61 @@ This package provides a solution for hand-eye calibration between a robot arm an
     ```bash
     ros2 run handeye_realsense eye2hand
     ```
+## How to use the result:
+
+You're absolutely correct in pointing out the challenge that arises when using `camera_color_optical_frame` as the child frame for hand-eye calibration. This choice can disconnect the relationship between `camera_color_optical_frame` (which is used in hand-eye calibration) and `camera_color_frame` (where the actual image data is published).
+
+Here’s a breakdown of the situation and how to handle it:
+
+### Problem:
+- When you specify `camera_color_optical_frame` as the child frame in hand-eye calibration, you create a transformation between the manipulator’s hand frame (`hand_frame`) and the camera's optical frame (`camera_color_optical_frame`).
+- However, the image data (such as the one on `color/image_rect_raw`) is published in the frame `camera_color_frame`, not `camera_color_optical_frame`.
+- This means that, after the calibration, you might lose the direct transformation from `camera_color_frame` to the manipulator's hand frame (`hand_frame`).
+
+### Solution:
+To transform from **pixel coordinates** (in the image plane, which corresponds to the camera's frame, often `camera_color_frame`) to the **hand coordinates**, you need to consider both the transformation between the hand frame and the camera's optical frame, and the relationship between the camera’s optical frame and the camera's image frame.
+
+Here’s how you can proceed:
+
+1. **Hand-Eye Calibration (Parent: `hand_frame`, Child: `camera_color_optical_frame`)**: 
+   Perform the hand-eye calibration with `camera_color_optical_frame` as the child frame. This will give you the transformation \( T_{hand\_frame \rightarrow camera\_color\_optical\_frame} \).
+
+2. **Camera Optical Frame to Image Frame**:
+   You need to account for the transformation between the camera's optical frame and the camera’s image frame (if necessary). For most RealSense cameras, the transformation between `camera_color_optical_frame` and `camera_color_frame` is fixed and generally includes a simple translation and rotation (since these frames are typically aligned or very close in the default setup).
+   
+   This relationship is often represented as a static transform in the ROS system, and you can retrieve it using the `tf` package. 
+
+   Specifically, the transformation from `camera_color_optical_frame` to `camera_color_frame` should be published by the driver, or you can check the static transforms available in your setup using:
+   ```bash
+   rosrun tf tf_echo camera_color_optical_frame camera_color_frame
+   ```
+   This command will show you the transformation between these two frames.
+
+3. **Combining Transformations**:
+   Once you have the transformation from `hand_frame` to `camera_color_optical_frame` from your hand-eye calibration and the transformation from `camera_color_optical_frame` to `camera_color_frame` (using `tf`), you can combine them.
+
+   The overall transformation from the **hand frame** to the **camera color frame** will be:
+
+   \[
+   T_{hand\_frame \rightarrow camera\_color\_frame} = T_{hand\_frame \rightarrow camera\_color\_optical\_frame} \times T_{camera\_color\_optical\_frame \rightarrow camera\_color\_frame}
+   \]
+
+4. **Transforming Pixel Coordinates**:
+   - **Pixel Coordinates to Camera Frame**: The pixel coordinates from the image are typically in the camera frame (e.g., `camera_color_frame`). To map them to 3D coordinates, you need to apply the camera intrinsics (such as the focal length, principal point, etc.).
+   - **Camera Frame to Hand Frame**: After transforming the 3D coordinates from the camera frame to the hand frame, you can use the combined transformation to convert from the camera frame to the hand frame.
+
+### Steps to Transform Pixel Coordinates to Hand Coordinates:
+
+1. **Obtain 3D Coordinates from Pixel**: Use the camera intrinsics to back-project the 2D pixel coordinates into 3D space in the camera’s coordinate system.
+2. **Apply Transformation to Hand Frame**: Use the transformation \( T_{camera\_color\_frame \rightarrow hand\_frame} \) to convert the 3D coordinates in the camera frame to the hand frame.
+
+This approach ensures that you correctly map the image data to the hand's coordinate system, even though the hand-eye calibration uses the optical frame.
+
+### Additional Tips:
+- Ensure that the transformations are continuously updated, especially if the camera or robot moves during operation.
+- Check for any discrepancies in frame alignment or missing transformations, particularly when working with different RealSense models or custom setups.
+
+By following this procedure, you can successfully transform from pixel coordinates (in `camera_color_frame`) to hand coordinates (`hand_frame`).
 
 ## Example
 
