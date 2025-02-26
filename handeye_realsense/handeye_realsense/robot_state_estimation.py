@@ -29,7 +29,7 @@ class RobotTransformNode(Node):
         self.pose_count = 0
         self.subscription_keypress = self.create_subscription(String, 'keypress_topic', self.keypress_callback, 10)
         
-        with open('src/handeye_realsense/config.yaml', 'r') as file:
+        with open('/home/snaak/Documents/handeye_calibration_ws/src/handeye_calibration_ros2/handeye_realsense/config.yaml', 'r') as file:
             config = yaml.safe_load(file)
         self.robot_data_file_name = config["robot_data_file_name"]
         self.base_link = config["base_link"]
@@ -56,15 +56,18 @@ class RobotTransformNode(Node):
     def get_full_transformation_matrix(self):
         T = np.eye(4)  # Start with the identity matrix
         link_order = [
-            ('lbr/link_0', 'lbr/link_1'), ('lbr/link_1', 'lbr/link_2'), 
-            ('lbr/link_2', 'lbr/link_3'), ('lbr/link_3', 'lbr/link_4'), 
-            ('lbr/link_4', 'lbr/link_5'), ('lbr/link_5', 'lbr/link_6'), 
-            ('lbr/link_6', 'lbr/link_7'), 
-            ('lbr/link_7', 'lbr/link_ee'),
+            # ('panda_link0', 'panda_link1'), ('panda_link0', 'panda_link2'), 
+            # ('panda_link0', 'panda_link3'), ('panda_link0', 'panda_link4'), 
+            # ('panda_link0', 'panda_link5'), ('panda_link0', 'panda_link6'), 
+            # ('panda_link0', 'panda_link7'), ('panda_link0', 'panda_link8'),
+            # ('panda_link0', 'panda_end_effector'), 
+            ('panda_link0', 'panda_hand')
         ]
+        #self.get_logger().info(f'Translation Vector {self.transformations}')
         for (frame_id, child_frame_id) in link_order:
             if (frame_id, child_frame_id) in self.transformations:
                 trans = self.transformations[(frame_id, child_frame_id)].transform
+                #self.get_logger().info(f'Translation Vector {trans}')
                 translation = [trans.translation.x, trans.translation.y, trans.translation.z]
                 rotation = [trans.rotation.x, trans.rotation.y, trans.rotation.z, trans.rotation.w]
                 T_local = np.eye(4)
@@ -100,6 +103,7 @@ class RobotTransformNode(Node):
         print(rotation_matrix)
         print("Translation Vector:")
         print(translation_vector)
+        self.get_logger().info(f'Translation Vector {translation_vector}')
         self.get_logger().info(f'Transformation for Pose {self.pose_count} appended to robot_data_realsense.yaml')
     
     def keypress_callback(self, msg):

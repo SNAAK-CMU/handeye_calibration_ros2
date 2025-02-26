@@ -46,7 +46,7 @@ class ArucoNode(Node):
     def __init__(self):
         super().__init__('aruco_node')
 
-        with open('src/handeye_realsense/config.yaml', 'r') as file:
+        with open('/home/snaak/Documents/handeye_calibration_ws/src/handeye_calibration_ros2/handeye_realsense/config.yaml', 'r') as file:
             config = yaml.safe_load(file)
         aruco_dictionary_name = config["aruco_dictionary_name"]
         self.aruco_marker_name = config["aruco_marker_name"]
@@ -65,6 +65,7 @@ class ArucoNode(Node):
         # Load the camera parameters from the saved file
         cv_file = cv2.FileStorage(self.camera_calibration_parameters_filename, cv2.FILE_STORAGE_READ)
         self.mtx = cv_file.getNode('K').mat()
+        self.get_logger().info(f'K matrix: self.mtx')
         self.dst = cv_file.getNode('D').mat()
         cv_file.release()
 

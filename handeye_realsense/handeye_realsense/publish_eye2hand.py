@@ -22,7 +22,7 @@ class TransformPublisher(Node):
     def __init__(self):
         super().__init__('transform_publisher')
         
-        with open('src/handeye_realsense/config.yaml', 'r') as file:
+        with open('/home/snaak/Documents/handeye_calibration_ws/src/handeye_calibration_ros2/handeye_realsense/config.yaml', 'r') as file:
             config = yaml.safe_load(file)
         self.handeye_result_file_name = config["handeye_result_file_name"]
         self.base_link = config["base_link"]
@@ -80,11 +80,12 @@ class TransformPublisher(Node):
     def get_full_transformation_matrix(self):
         T = np.eye(4)  # Start with the identity matrix
         link_order = [
-            ('world','lbr/world'), ('lbr/world','lbr/link_0'),
-            ('lbr/link_0', 'lbr/link_1'), ('lbr/link_1', 'lbr/link_2'), 
-            ('lbr/link_2', 'lbr/link_3'), ('lbr/link_3', 'lbr/link_4'), 
-            ('lbr/link_4', 'lbr/link_5'), ('lbr/link_5', 'lbr/link_6'), 
-            ('lbr/link_6', 'lbr/link_7'), ('lbr/link_7', 'lbr/link_ee'),
+            ('world','panda_link0'),
+            ('panda_link0', 'panda_link1'), ('panda_link0', 'panda_link2'), 
+            ('panda_link0', 'panda_link3'), ('panda_link0', 'panda_link4'), 
+            ('panda_link0', 'panda_link5'), ('panda_link0', 'panda_link6'), 
+            ('panda_link0', 'panda_link7'), ('panda_link0', 'panda_link8'),
+            ('panda_link0', 'panda_end_effector'), ('panda_link0', 'panda_hand')
         ]
         for (frame_id, child_frame_id) in link_order:
             if (frame_id, child_frame_id) in self.transformations:
