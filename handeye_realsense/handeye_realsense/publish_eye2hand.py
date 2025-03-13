@@ -22,7 +22,7 @@ class TransformPublisher(Node):
     def __init__(self):
         super().__init__('transform_publisher')
         
-        with open('/home/snaak/Documents/handeye_calibration_ws/src/handeye_calibration_ros2/handeye_realsense/config.yaml', 'r') as file:
+        with open('/home/snaak/Documents/manipulation_ws/src/handeye_calibration_ros2/handeye_realsense/config.yaml', 'r') as file:
             config = yaml.safe_load(file)
         self.handeye_result_file_name = config["handeye_result_file_name"]
         self.base_link = config["base_link"]
