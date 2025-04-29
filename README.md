@@ -209,6 +209,11 @@ We welcome contributions from the community! If you'd like to contribute, please
    Open a Pull Request: 
    Go to the original repository on GitHub and open a Pull Request (PR). Make sure to describe your changes in detail and explain why they are necessary.
 
+## Modifications
+This fork includes the following changes from the original repository:
+- Subscription to Franka Emika Panda transform topics
+- Calibration values for SNAAK system
+
 ## Citation
 If you enjoyed using this package, we would really appreciate it if you could leave a ⭐ and / or cite it!
 
